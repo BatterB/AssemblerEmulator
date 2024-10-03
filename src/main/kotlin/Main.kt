@@ -6,9 +6,12 @@ import org.example.Assembler.assemble
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 fun main() {
     val sourceCode = listOf(
-        "        MOV AX, [data1]   // Загружаем data1 в регистр AX (16 бит)",
-        "        MOV BX, [data2]    // Загружаем data2 в регистр BX (16 бит)",
+        "        MOV AX, 1   // Загружаем data1 в регистр AX (16 бит)",
+        "        MOV BX, 2    // Загружаем data2 в регистр BX (16 бит)",
+        "        loop:                                                  ",
         "        ADD AX, BX        // Складываем AX и BX, результат в AX",
+        "        CMP AX, 11        // Складываем AX и BX, результат в AX",
+        "        JNE loop       // Складываем AX и BX, результат в AX",
         "        MOV [result], AX   // Сохраняем результат в память",
         "        HLT                // Остановка программы",
         "data1:  DW   9          // Данные 1 (16 бит)",

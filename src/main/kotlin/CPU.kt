@@ -26,6 +26,7 @@ class CPU {
                     pc += 1
                 }
                 OpCode.MOV.code, OpCode.ADD.code, OpCode.SUB.code, OpCode.MUL.code, OpCode.DIV.code, OpCode.CMP.code -> {
+                    println("op code $opcode")
                     val instr = decodeInstruction(opcode)
                     executeALUInstruction(instr)
                 }
@@ -46,6 +47,7 @@ class CPU {
     }
 
     private fun decodeInstruction(opcode: Int): ALUInstruction {
+        println(pc)
         val operandType1 = memory[pc + 1].toInt()
         val operandName1Length = memory[pc + 2].toInt()
         val operandName1 = if (operandName1Length > 0) {
@@ -80,7 +82,6 @@ class CPU {
         val srcValue = getOperandValue(instr.src)
         when (instr.opcode) {
             OpCode.MOV.code -> {
-                println(instr)
                 setOperandValue(instr.dest, srcValue)
             }
             OpCode.ADD.code -> {
@@ -123,6 +124,7 @@ class CPU {
     }
 
     private fun decodeJumpInstruction(opcode: Int): JumpInstruction {
+        println("jump")
         val address = readInt(pc + 1)
         pc += 5
         return JumpInstruction(opcode, address)
@@ -145,7 +147,6 @@ class CPU {
     private fun getOperandValue(operand: Operand): Int {
         return when (operand.type) {
             OperandType.REGISTER -> {
-                println(operand)
                 val fullRegName = operand.name!!.toUpperCase()
                 when (fullRegName) {
                     "EAX", "EBX", "ECX", "EDX" -> registers[fullRegName]!!
@@ -174,7 +175,6 @@ class CPU {
                 } else if (fullRegName in listOf("AX", "BX", "CX", "DX")) {
                     val regName = "E$fullRegName"
                     val existingValue = registers[regName]!!
-                    println(value)
                     registers[regName] = (existingValue and 0xFFFF0000.toInt()) or (value and 0xFFFF)
                 } else {
                     throw IllegalArgumentException("Unknown register: ${operand.name}")
@@ -196,7 +196,7 @@ class CPU {
         if (address < 0 || address + 3 >= MEMORY_SIZE) {
             throw IllegalArgumentException("Выход за пределы памяти при чтении")
         }
-
+        println("memory ${(memory[address].toInt() and 0xFF)} ${((memory[address + 1].toInt() and 0xFF) shl 8)} ${((memory[address + 2].toInt() and 0xFF) shl 16)} ${((memory[address + 3].toInt() and 0xFF) shl 24)}")
         return (memory[address].toInt() and 0xFF) or
                 ((memory[address + 1].toInt() and 0xFF) shl 8) or
                 ((memory[address + 2].toInt() and 0xFF) shl 16) or

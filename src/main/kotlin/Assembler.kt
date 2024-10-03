@@ -50,11 +50,15 @@ object Assembler {
                 val instr = tokens[0].toUpperCase()
                 val args = if (tokens.size > 1) tokens[1] else ""
                 instructions.add(Pair(instr, args))
+                println("$instr $codeAddress")
                 codeAddress += when (instr) {
                     "NOP", "HLT" -> 1
                     "JMP", "JE", "JNE" -> 5
                     "MOV", "ADD", "SUB", "MUL", "DIV", "CMP" -> {
+                        val operands = args.split(",").map { it.trim() }
+                        println("operations lengths $instr $args ${operands[0].length} ${operands[1].length}")
                         val operandLengths = parseOperandLengths(args)
+
                         13 + operandLengths.first + operandLengths.second
                     }
                     else -> {
@@ -133,10 +137,8 @@ object Assembler {
     }
 
     fun parseOperand(operand: String, labels: Map<String, Int>): Operand {
-        println(operand)
         return when {
             operand.matches(Regex("E?[ABCD]X")) -> {
-                println(operand)
                 // Register EAX, EBX, ECX, EDX or AX, BX, CX, DX
                 val isWord = !operand.startsWith("E")
                 Operand(OperandType.REGISTER, operand.toUpperCase(), 0, isWord)
@@ -168,9 +170,25 @@ object Assembler {
 
     fun parseOperandLengths(args: String): Pair<Int, Int> {
         val operands = args.split(",").map { it.trim() }
-        val destLength = operands[0].length
-        val srcLength = operands[1].length
+
+        val destLength = calculateOperandLenght(operands[0])
+        val srcLength = calculateOperandLenght(operands[1])
         return Pair(destLength, srcLength)
+    }
+
+    fun calculateOperandLenght(operand: String): Int{
+        return when {
+            operand.matches(Regex("E?[ABCD]X")) -> {
+                operand.length
+            }
+            operand.matches(Regex("\\[.*\\]")) -> {
+                operand.length
+            }
+            operand.matches(Regex("\\d+")) -> {
+                0
+            }
+            else -> throw IllegalArgumentException("Unknown operand: $operand")
+        }
     }
 
     fun parseDataDirective(directive: String, values: String): List<Byte> {
@@ -194,13 +212,11 @@ object Assembler {
                 println("directive $directive values $values")
                 val bytes = mutableListOf<Byte>()
                 val parts = values.split(",").map { it.trim() }
-                println(parts)
                 for (part in parts) {
                     val value = part.toInt()
                     bytes.add((value and 0xFF).toByte())
                     bytes.add(((value shr 8) and 0xFF).toByte())
                 }
-                println(bytes)
                 bytes
             }
             "DD" -> {
